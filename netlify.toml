@@ -1,0 +1,10 @@
+[build]
+  functions = "netlify/functions"
+  publish = "dist"
+
+# 所有 /api/* 请求交给 feishu 云函数处理
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/feishu"
+  status = 200
+  force = true
