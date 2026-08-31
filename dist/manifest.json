@@ -1,0 +1,17 @@
+{
+  "name": "糖友饮食血糖记录",
+  "short_name": "糖友记录",
+  "description": "说一句话记录饮食与血糖，AI 自动拆解入库，可查看多天趋势与超标饮食分析",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f6f8",
+  "theme_color": "#0f7b62",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
