@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f7b62">
+<title>糖友饮食记录</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="糖友记录">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f2f4f6;--card:#fff;--line:#d9dde2;--line2:#b9c0c8;--tx:#151a20;--tx2:#40464e;--tx3:#727a84;--pri:#0b6b55;--pri-bg:#e2f3ee;--hi:#b3261e;--hi-bg:#fdecea;--lo:#8a5200;--ok:#0b6b55;--r:14px;--fs:17px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+html[data-size="lg"]{--fs:19px}
+html[data-size="xl"]{--fs:22px}
+body{background:var(--bg);color:var(--tx);font:400 var(--fs)/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.wrap{max-width:600px;margin:0 auto;padding:0 16px}
+header{padding:calc(14px + env(safe-area-inset-top)) 16px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+header .t{font-size:20px;font-weight:700}
+header .s{font-size:14px;color:var(--tx2);margin-top:3px}
+header .s a{color:var(--pri);text-decoration:none}
+.fontctrl{display:flex;gap:8px;margin-left:auto}
+.fontctrl button{width:46px;height:46px;border-radius:12px;border:1px solid var(--line2);background:#fff;font-size:18px;font-weight:700;color:var(--tx2);font-family:inherit}
+.fontctrl button:active{background:var(--pri-bg);color:var(--pri)}
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.tabs button{flex:1;padding:15px 0;font-size:17px;border:0;background:none;color:var(--tx2);font-family:inherit;min-height:52px}
+.tabs button.on{color:var(--pri);font-weight:700;box-shadow:inset 0 -3px 0 var(--pri)}
+.pane{display:none;padding:16px 0 34px}.pane.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.lbl{font-size:15px;color:var(--tx2);margin:12px 0 6px;font-weight:600}
+.lbl:first-child{margin-top:0}
+textarea,input,select{font-family:inherit;font-size:18px;color:var(--tx);background:#fff;border:1.5px solid var(--line2);border-radius:12px;padding:13px 14px;width:100%}
+textarea{resize:none;line-height:1.6}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--pri)}
+.btn{display:block;width:100%;padding:16px;border:0;border-radius:14px;background:var(--pri);color:#fff;font-size:19px;font-weight:700;font-family:inherit;min-height:56px}
+.btn:active{opacity:.85}.btn[disabled]{opacity:.45}
+.btn.gray{background:#e7eaee;color:var(--tx2)}
+.btn.ghost{background:#fff;color:var(--pri);border:1.5px solid var(--pri)}
+.row{display:flex;gap:10px}
+.src{display:flex;gap:8px;margin-bottom:12px}
+.src button{flex:1;padding:12px 0;border-radius:12px;border:1.5px solid var(--line2);background:#fff;color:var(--tx2);font-size:16px;font-family:inherit;min-height:48px}
+.src button.on{border-color:var(--pri);background:var(--pri-bg);color:var(--pri);font-weight:700}
+.hint{font-size:15px;color:var(--tx2);line-height:1.7;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.guide{background:var(--pri-bg);border:1.5px solid #9fd4c4;border-radius:14px;padding:16px;margin-bottom:14px}
+.guide .gt{font-size:18px;font-weight:700;color:var(--pri);margin-bottom:10px}
+.guide ol{margin:0;padding-left:24px;color:var(--tx);font-size:16px;line-height:2}
+.guide .ex{background:#fff;border-radius:10px;padding:12px 14px;margin-top:10px;font-size:16px;color:var(--tx2);line-height:1.7}
+.rec{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;min-height:72px}
+.rec .m{font-size:15px;color:var(--tx2);flex:1;min-width:0}
+.rec .m b{display:block;font-size:17px;color:var(--tx);font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec .m span{font-size:14px}
+.rec .n{font-size:24px;font-weight:700;flex:none;text-align:right;line-height:1.2}
+.rec .n small{display:block;font-size:12px;color:var(--tx3);font-weight:600;margin-top:2px}
+.empty{text-align:center;color:var(--tx3);font-size:16px;padding:44px 20px}
+.day{font-size:16px;color:var(--tx2);font-weight:700;margin:18px 0 10px;padding-left:2px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:#151a20;color:#fff;font-size:16px;padding:13px 22px;border-radius:26px;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90%}
+.toast.on{opacity:.95}
+.sheet{position:fixed;inset:0;background:rgba(20,22,25,.45);z-index:50;display:none}
+.sheet.on{display:block}
+.sheet .body{position:absolute;left:0;right:0;bottom:0;max-height:90%;overflow-y:auto;background:var(--bg);border-radius:18px 18px 0 0;padding:10px 16px calc(24px + env(safe-area-inset-bottom))}
+.grip{width:44px;height:5px;background:var(--line2);border-radius:3px;margin:8px auto 14px}
+.more{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;display:none}
+.more.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px}
+.stat b{display:block;font-size:26px;font-weight:700;line-height:1.3}
+.stat b small{font-size:14px;color:var(--tx3);font-weight:400;margin-left:3px}
+.stat span{font-size:13px;color:var(--tx2)}
+.stat.warn b{color:var(--hi)}
+.stat.good b{color:var(--pri)}
+.chartbox{position:relative;height:240px}
+.usage{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:14px 0;font-size:15px;color:var(--tx2);line-height:1.8}
+.usage summary{font-weight:700;color:var(--tx);cursor:pointer;font-size:16px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch}
+.chips button{flex:none;font-size:16px;padding:11px 18px;border-radius:24px;border:1.5px solid var(--line2);background:#fff;color:var(--tx2);font-family:inherit;min-height:46px}
+.chips button.on{border-color:var(--pri);background:var(--pri-bg);color:var(--pri);font-weight:700}
+.seg{display:flex;background:#e7eaee;border-radius:12px;padding:4px;margin-bottom:14px}
+.seg button{flex:1;padding:12px 0;border:0;border-radius:10px;background:none;color:var(--tx2);font-size:16px;font-family:inherit;min-height:48px}
+.seg button.on{background:#fff;color:var(--pri);font-weight:700}
+.gl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gl .f{position:relative}
+.gl label{display:block;font-size:12px;color:var(--tx2);text-align:center;margin-bottom:4px;font-weight:600;white-space:pre-line;line-height:1.25}
+.gl input{padding:10px 2px;text-align:center;font-size:17px;border-radius:10px}
+.gl input.na{background:#fbfcfd}
+.gl .core label{color:var(--pri);font-weight:700}
+.gl .core input{border-color:#9fd4c4;background:#f2faf7}
+.vhi{color:var(--hi);font-weight:700}
+.vlo{color:var(--lo);font-weight:700}
+.vok{color:var(--ok);font-weight:700}
+.gtag{display:inline-block;font-size:13px;font-weight:700;border-radius:8px;padding:2px 8px;margin-top:2px}
+.gtag.hi{background:var(--hi-bg);color:var(--hi)}
+.gtag.ok{background:var(--pri-bg);color:var(--pri)}
+.gtag.lo{background:#fdf3e3;color:var(--lo)}
+/* ---- 安装提示条 ---- */
+.install{display:none;align-items:center;gap:12px;background:var(--pri-bg);border:1.5px solid #9fd4c4;border-radius:var(--r);padding:13px 15px;margin-bottom:14px;font-size:15px;color:var(--pri)}
+.install.on{display:flex}
+.install button{flex:none;border:1.5px solid var(--pri);background:var(--pri);color:#fff;border-radius:10px;padding:10px 16px;font-size:15px;font-family:inherit;min-height:44px}
+.install span{flex:1;line-height:1.6}
+/* ---- 响应式 ---- */
+@media (max-width:380px){
+  body{--fs:16px}
+  .wrap{padding:0 12px}
+  .chartbox{height:210px}
+  .stat b{font-size:22px}
+  .gl{grid-template-columns:repeat(3,1fr)}
+  .gl label{font-size:11px}
+}
+@media (min-width:600px){
+  .chartbox{height:300px}
+}
+@media (orientation:landscape) and (max-height:520px){
+  .chartbox{height:230px}
+  header{padding-top:8px}
+}
+</style>
+<script>window.API_BASE="";</script></head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="flex:1;min-width:0">
+      <div class="t">糖友饮食记录</div>
+      <div class="s" id="hdrSub">说一句话，帮你记下来</div>
+    </div>
+    <div class="fontctrl">
+      <button id="fontMin" title="把字调小">A−</button>
+      <button id="fontMax" title="把字调大">A+</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap" style="padding-top:10px">
+  <div class="install" id="installBar">
+    <span id="installTip">把应用装到手机桌面，像 App 一样一键打开（离线也能看数据）</span>
+    <button id="installBtn">安装</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="on" data-p="in">记录</button>
+  <button data-p="today">今日</button>
+  <button data-p="report">分析</button>
+</div>
+
+<div class="wrap">
+
+  <div class="pane on" id="p-in">
+    <div class="guide">
+      <div class="gt">不会用？跟着做，就三步</div>
+      <ol>
+        <li>点一下下面的大输入框</li>
+        <li>用手机键盘上的「小话筒」说话：吃了什么、几点测的血糖</li>
+        <li>点绿色的「保存记录」按钮，就存好了</li>
+      </ol>
+      <div class="ex">照着这样说：<b>“早上两个包子一杯豆浆，饭前6.1；中午半碗米饭，饭后两小时8.9”</b></div>
+    </div>
+    <div class="card" id="medCard" style="padding:13px 14px;margin-bottom:12px">
+      <div class="lbl" style="margin-top:0">💊 每天吃的药（自动帮你记，不用每次说）</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1;font-size:17px;font-weight:600" id="medText">还没设置</div>
+        <button class="btn gray" id="medBtn" style="flex:0 0 96px;font-size:15px;padding:9px 0;min-height:44px">设置</button>
+      </div>
+      <div id="medRemind" style="display:none;margin-top:10px;background:#fdf3e3;border:1.5px solid #efd9a7;border-radius:12px;padding:11px 13px;font-size:15px;color:#8a5200;line-height:1.6"></div>
+    </div>
+    <textarea id="raw" rows="5" placeholder="点这里，然后用键盘上的小话筒说话"></textarea>
+    <div style="height:14px"></div>
+    <button class="btn" id="submitBtn">保存记录</button>
+    <div style="height:10px"></div>
+    <button class="btn gray" id="clearBtn">重新说</button>
+  </div>
+
+  <div class="pane" id="p-today"><div id="todayBox"><div class="empty">加载中…</div></div></div>
+
+  <!-- ============ 血糖分析中心 ============ -->
+  <div class="pane" id="p-report">
+    <div class="seg">
+      <button class="on" data-mode="line">看变化（折线图）</button>
+      <button data-mode="day">看某一天（柱状图）</button>
+    </div>
+
+    <div id="ctrlLine">
+      <div class="chips" id="rangeChips">
+        <button class="on" data-range="7">近7天</button>
+        <button data-range="30">近30天</button>
+        <button data-range="90">近90天</button>
+        <button data-range="0">全部</button>
+        <button id="refreshBtn">↻ 刷新</button>
+      </div>
+      <div class="row" style="gap:8px;margin-bottom:12px">
+        <input type="date" id="fromD" style="flex:1;font-size:15px;padding:10px">
+        <input type="date" id="toD" style="flex:1;font-size:15px;padding:10px">
+        <button class="btn gray" id="customBtn" style="flex:0 0 86px;font-size:15px;padding:10px 0">自定义</button>
+      </div>
+      <div class="lbl">看哪一餐（选一个）</div>
+      <div class="chips" id="mealChips"></div>
+      <div class="lbl">看什么时间的血糖（可多选，选几个就画几条线，颜色不同）</div>
+      <div class="chips" id="slotChips"></div>
+    </div>
+    <div id="ctrlDay" style="display:none">
+      <div class="lbl">看哪一天</div>
+      <div class="row" style="gap:8px">
+        <input type="date" id="dayPick" style="flex:1">
+        <button class="btn gray" id="dayPrev" style="flex:0 0 90px;font-size:15px;padding:10px 0">前一天</button>
+        <button class="btn gray" id="dayNext" style="flex:0 0 90px;font-size:15px;padding:10px 0">后一天</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:8px">
+      <div class="lbl" id="chartTitle">血糖变化（每天一条线，横线是正常范围）</div>
+      <div class="chartbox"><canvas id="cAnalyze"></canvas></div>
+    </div>
+
+    <div id="insightsBox" style="display:none"></div>
+    <div id="statCards"></div>
+
+    <div class="card"><div class="lbl">血糖偏高的那些餐，吃的最多的是什么</div>
+      <div class="chartbox"><canvas id="cBadFood"></canvas></div></div>
+
+    <details class="usage" open>
+      <summary>这个页面怎么看（点这里展开）</summary>
+      <div style="margin-top:6px">
+        ① 最上面选时间：看最近 7 天、30 天，还是全部。<br>
+        ② 想只看某一餐（比如只看早饭），点「早餐」，其他就藏起来了。<br>
+        ③ 想只看某一个时间的血糖（比如只看饭后两小时），点一下那个时间。<br>
+        ④ 上面的图看变化，下面的图看「血糖偏高的那几餐，吃的最多的是什么」。<br>
+        ⑤ 下面每条记录都能点开，改数字、补记录都行。
+      </div>
+    </details>
+
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn ghost" id="csvBtn">把数据存到电脑</button>
+      <button class="btn ghost" id="openBase" style="flex:0 0 150px">打开数据表</button>
+    </div>
+
+    <div class="day">记录明细（点一下可以修改）</div>
+    <div id="queryBox"></div>
+  </div>
+
+</div>
+
+<div class="sheet" id="sheet"><div class="body">
+  <div class="grip"></div>
+  <div id="sheetBody"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn" id="sheetSave">保存</button>
+    <button class="btn gray" id="sheetClose" style="flex:0 0 90px">关闭</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* 后端地址：本地用相对路径；部署到云端时由部署脚本注入 window.API_BASE（云函数 HTTP 访问服务地址） */
+const API_BASE = (typeof window !== 'undefined' && window.API_BASE) ? window.API_BASE : '';
+const MEALS=['早餐','午餐','晚餐','加餐','夜宵','其他'];
+const SOURCES=['语音录入','手动录入','事后补录'];
+const GL_FIELDS=[['餐前血糖','饭前'],['餐后2小时','饭后2小时'],['餐后3小时','饭后3小时']];
+const GL_LABEL={'餐前血糖':'饭前','餐后30分':'饭后30分钟','餐后1小时':'饭后1小时','餐后2小时':'饭后2小时','餐后3小时':'饭后3小时'};
+/* 不同时间点的血糖正常范围（mmol/L）：lo=偏低线, ideal=理想上限, warn=偏高线 */
+const GL_RANGE={
+  '餐前血糖':{lo:3.9,ideal:6.1,warn:7.0},
+  '餐后30分':{lo:3.9,ideal:8.9,warn:10.0},
+  '餐后1小时':{lo:3.9,ideal:8.9,warn:10.0},
+  '餐后2小时':{lo:3.9,ideal:7.8,warn:10.0},
+  '餐后3小时':{lo:3.9,ideal:7.0,warn:8.3}
+};
+const MEAL_MAP={'早饭':'早餐','午饭':'午餐','晚饭':'晚餐'};
+const MEAL_OPTS=[['全天','全天'],['早饭','早饭'],['午饭','午饭'],['晚饭','晚饭']];
+const SLOT_OPT=[['餐前血糖','饭前'],['餐后2小时','饭后2小时'],['餐后3小时','饭后3小时']];
+/* 时间点线色（线色=时间点；点色=状态） */
+const SLOT_COLORS={'餐前血糖':'#185FA5','餐后30分':'#0FA3A3','餐后1小时':'#7F77DD','餐后2小时':'#E08A00','餐后3小时':'#888780'};
+const STATE_COLORS={ok:'#1D9E75',warn:'#E2B93B',hi:'#C0392B',lo:'#BA7517'};
+const EDITABLE=['餐次','日期','食物明细','碳水估算(g)','升糖风险','餐前血糖','餐后30分','餐后1小时','餐后2小时','餐后3小时','胰岛素','口服药','餐后运动','身体感受','备注'];
+
+let ALL=[], EDIT_CTX=null;
+let RANGE=7, MODE='line';
+let MEAL_SEL='全天', SLOT_SEL=['餐后2小时'];
+let DAY_PICK=null;
+let CHARTS={};
+
+function todayStr(d){const t=d||new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+function fmtDate(v){if(!v)return'';if(typeof v==='string')return v.slice(0,10);const d=new Date(Number(v));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(()=>e.classList.remove('on'),2200);}
+function NZ(v){return (v===0||v==='0'||v==='0.0')?null:v;}
+function glucoseClass(v){v=NZ(v);if(v==null||v==='')return'';const n=parseFloat(v);if(isNaN(n))return'';if(n>=10)return'vhi';if(n<3.9)return'vlo';if(n>=4.4&&n<=7.8)return'vok';return'';}
+function glucoseTag(v){
+  v=NZ(v); if(v==null)return '';
+  const n=parseFloat(v); if(isNaN(n))return'';
+  if(n>=10)return'<span class="gtag hi">偏高</span>';
+  if(n<3.9)return'<span class="gtag lo">偏低</span>';
+  if(n>=4.4&&n<=7.8)return'<span class="gtag ok">正常</span>';
+  return'<span class="gtag lo" style="background:#fdf3e3">临界</span>';
+}
+/* 按时间点区间的判定 */
+function rangeInfo(slot){return GL_RANGE[slot]||GL_RANGE['餐后2小时'];}
+function levelOf(v,slot){
+  const R=rangeInfo(slot); v=NZ(v); if(v==null)return{cls:'',tag:'',ok:null};
+  const n=parseFloat(v);
+  if(n<R.lo)return{cls:'vlo',tag:'偏低',ok:false};
+  if(n<=R.ideal)return{cls:'vok',tag:'正常',ok:true};
+  if(n<=R.warn)return{cls:'',tag:'临界',ok:false};
+  return{cls:'vhi',tag:'偏高',ok:false};
+}
+function aggKey(d,mode){
+  if(mode==='day')return d;
+  if(mode==='month')return d.slice(0,7);
+  const t=new Date(d+'T00:00:00');
+  t.setDate(t.getDate()-((t.getDay()+6)%7));
+  return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+}
+function aggLabel(k,mode){
+  if(mode==='day')return k.slice(5);
+  if(mode==='month')return k;
+  return k.slice(5)+'周';
+}
+function pickAgg(){
+  const ds=ranged().map(recDate).filter(Boolean).sort();
+  if(!ds.length)return'day';
+  const span=(new Date(ds[ds.length-1])-new Date(ds[0]))/86400000;
+  if(span<=31)return'day';      // 7天/30天 → 每天一个点
+  if(span<=180)return'week';    // 90天 → 每周一个点
+  return'month';                // 半年以上 → 每月
+}
+function stateColor(lv){return lv.ok?STATE_COLORS.ok:(lv.cls==='vlo'?STATE_COLORS.lo:(lv.tag==='临界'?STATE_COLORS.warn:STATE_COLORS.hi));}
+function getF(r,k){const v=(r.fields||{})[k];return Array.isArray(v)?v[0]:v;}
+function gvNum(r,k){const v=NZ(getF(r,k));const n=v==null?null:parseFloat(v);return(n==null||isNaN(n))?null:n;}
+function recDate(r){return fmtDate(getF(r,'日期'));}
+function mkChart(id,cfg){if(CHARTS[id])CHARTS[id].destroy();CHARTS[id]=new Chart(document.getElementById(id),cfg);}
+
+/* ---------------- 数据加载 + 缓存 ---------------- */
+async function loadData(){
+  const CACHE='glu_records_cache';
+  try{
+    const j=await(await fetch(API_BASE+'/api/records?limit=2000')).json();
+    if(j.records){ALL=j.records;localStorage.setItem(CACHE,JSON.stringify({ts:Date.now(),rows:ALL}));}
+    else ALL=JSON.parse(localStorage.getItem(CACHE)||'null')?.rows||[];
+  }catch(e){
+    ALL=JSON.parse(localStorage.getItem(CACHE)||'null')?.rows||[];
+    toast('离线缓存模式');
+  }
+  renderToday(); renderAll();
+}
+
+/* ---------------- 记录 Tab ---------------- */
+const MED_KEY='glu_med';
+let MED=null;
+try{MED=JSON.parse(localStorage.getItem(MED_KEY)||'null');}catch(e){}
+function renderMed(){
+  const t=document.getElementById('medText');
+  const r=document.getElementById('medRemind');
+  if(!MED||!MED.text){t.textContent='还没设置（点右边设置）';r.style.display='none';return;}
+  t.textContent=MED.text;
+  const today=new Date();
+  const last=new Date(MED.lastDate||today);
+  const days=Math.floor((today-last)/86400000);
+  const cycle=parseInt(MED.cycleDays)||90;
+  if(days>=cycle){
+    r.style.display='block';
+    r.innerHTML=`上次复查/开药：<b>${MED.lastDate||'?'}</b>，已经过了 <b>${days}</b> 天。<br>该去医院复查，问问医生药要不要调了（每 ${cycle} 天提醒一次）。`;
+  }else{
+    r.style.display='none';
+  }
+}
+document.getElementById('medBtn').addEventListener('click',()=>{
+  const cur=MED||{text:'',lastDate:'',cycleDays:90};
+  document.getElementById('sheetBody').innerHTML=`<div class="card">
+    <div class="lbl">每天吃的药（药名 + 怎么吃）</div>
+    <input id="medIn" value="${esc(cur.text)}" placeholder="例如：二甲双胍 0.5g，早晚饭后各一次">
+    <div class="lbl">上次复查 / 开药日期</div>
+    <input type="date" id="medDate" value="${esc(cur.lastDate)}">
+    <div class="lbl">多久提醒一次复查（天）</div>
+    <input type="number" id="medCycle" value="${parseInt(cur.cycleDays)||90}" placeholder="90">
+    <div style="font-size:13px;color:var(--tx2);margin-top:8px">设置后，每次保存记录会自动把药记进去，不用每次说。到复查时间会在首页提醒你。</div>
+  </div>`;
+  document.getElementById('sheetSave').textContent='保存常用药';
+  const oldSave=document.getElementById('sheetSave').onclick;
+  document.getElementById('sheetSave').onclick=async()=>{
+    const text=document.getElementById('medIn').value.trim();
+    if(!text){toast('请填写药名');return;}
+    MED={text:text,lastDate:document.getElementById('medDate').value||todayStr(),cycleDays:parseInt(document.getElementById('medCycle').value)||90};
+    try{localStorage.setItem(MED_KEY,JSON.stringify(MED));}catch(e){}
+    toast('已保存，之后会自动带上');
+    document.getElementById('sheet').classList.remove('on');
+    renderMed();
+  };
+  document.getElementById('sheet').classList.add('on');
+});
+document.getElementById('sheetClose').addEventListener('click',()=>{document.getElementById('sheet').classList.remove('on');EDIT_CTX=null;});
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+  const raw=document.getElementById('raw').value.trim();
+  if(!raw){toast('先说点什么吧');return;}
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.textContent='提交中…';
+  try{
+    const rec={'原始语音文本':raw,'日期':todayStr(),'数据来源':'语音录入'};
+    if(MED&&MED.text)rec['口服药']=MED.text;
+    const r=await fetch(API_BASE+'/api/records',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({records:[rec]})});
+    const j=await r.json();
+    if(j.ok){toast('保存好了！正在自动整理，稍等一会就能看到');document.getElementById('raw').value='';loadData();}
+    else toast(j.queued?'写入失败，已暂存本机':('失败：'+j.error));
+  }catch(e){toast('网络错误：'+e.message);}
+  btn.disabled=false;btn.textContent='保存记录';
+});
+document.getElementById('clearBtn').addEventListener('click',()=>{document.getElementById('raw').value='';});
+
+/* ---------------- 今日 ---------------- */
+function recRow(r){
+  const get=k=>getF(r,k);
+  const meal=get('餐次')||'拆解中…';
+  const when=recDate(r);
+  const food=get('食物明细')||get('食物原文')||'（等待拆解）';
+  const g2=NZ(get('餐后2小时')),g0=NZ(get('餐前血糖'));
+  const main=g2!=null?g2:(g0!=null?g0:null);
+  const sub=g2!=null?'饭后2小时':(g0!=null?'饭前':'');
+  return `<div class="rec" data-open="${r.record_id}">
+    <div class="m"><b>${when?when+' ':''}${esc(meal)} · ${esc(food)}</b>
+    <span>${esc([get('碳水估算(g)')!=null?('主食(碳水) '+get('碳水估算(g)')+'g'):'',get('胰岛素')||'',get('餐后运动')||''].filter(Boolean).join(' · ')||'血糖还没填，点进来补')}</span></div>
+    <div class="n ${glucoseClass(main)}">${main!=null?main:'--'}<small>${sub}${glucoseTag(main)}</small></div></div>`;
+}
+function bindRows(scope){scope.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',()=>openEdit(el.getAttribute('data-open'))));}
+function renderToday(){
+  const box=document.getElementById('todayBox');
+  const t=todayStr();
+  const rows=ALL.filter(r=>recDate(r)===t);
+  const filled=MEALS.filter(m=>rows.some(r=>getF(r,'餐次')===m));
+  const miss=['早餐','午餐','晚餐'].filter(m=>filled.indexOf(m)<0);
+  let remind='';
+  if(MED&&MED.text&&MED.lastDate){
+    const days=Math.floor((new Date()-new Date(MED.lastDate))/86400000);
+    const cycle=parseInt(MED.cycleDays)||90;
+    if(days>=cycle){
+      remind=`<div style="background:#fdf3e3;border:1.5px solid #efd9a7;border-radius:12px;padding:12px 14px;font-size:15px;color:#8a5200;line-height:1.6;margin-bottom:10px">
+        💊 上次复查/开药：<b>${esc(MED.lastDate)}</b>，已过 <b>${days}</b> 天。<br>该去医院复查，问问医生药要不要调了（每 ${cycle} 天提醒一次）。</div>`;
+    }
+  }
+  box.innerHTML=remind+`<div class="hint">今天已经记了 <b>${rows.length}</b> 餐${miss.length?'，还没记的：'+miss.join('、'):'，三餐都记齐了'}。点一下任意一条可以改。</div>`
+    +(rows.length?rows.map(recRow).join(''):`<div class="empty">今天还没有记录<br>去「记录」页说一句吧</div>`);
+  bindRows(box);
+}
+
+/* ---------------- 编辑 ---------------- */
+function editCard(rec){
+  const opts=MEALS.map(m=>`<option value="${m}"${rec['餐次']===m?' selected':''}>${m}</option>`).join('');
+  const ropts=['','高','中','低'].map(m=>`<option value="${m}"${rec['升糖风险']===m?' selected':''}>${m||'未评'}</option>`).join('');
+  const gl=GL_FIELDS.map(([f,l])=>{
+    const v=rec[f]==null?'':rec[f];
+    return `<div class="f${f==='餐后2小时'?' core':''}"><label>${l}</label>
+      <input type="number" inputmode="decimal" step="0.1" class="${v===''?'na':''} ${glucoseClass(v)}" data-f="${f}" value="${v}" placeholder="-"></div>`;
+  }).join('');
+  return `<div class="card">
+    <div class="lbl">哪一餐 / 哪一天</div>
+    <div class="row">
+      <select data-f="餐次" style="width:auto">${opts}</select>
+      <input type="date" data-f="日期" value="${rec['日期']||''}">
+    </div>
+    <div class="lbl">血糖值（正常 3.9~10）</div><div class="gl">${gl}</div>
+    <div class="more on">
+      <div class="lbl">吃了什么</div>
+      <textarea rows="2" data-f="食物明细">${esc(rec['食物明细']||'')}</textarea>
+      <div class="row" style="margin-top:8px">
+        <div style="flex:1"><div class="lbl">主食(碳水) g</div>
+          <input type="number" inputmode="decimal" step="0.1" data-f="碳水估算(g)" value="${rec['碳水估算(g)']==null?'':rec['碳水估算(g)']}"></div>
+        <div style="flex:1"><div class="lbl">升糖快慢</div>
+          <select data-f="升糖风险" style="padding:10px 6px">${ropts}</select></div>
+      </div>
+      <div class="lbl">打的胰岛素</div><input data-f="胰岛素" value="${esc(rec['胰岛素']||'')}" placeholder="例如：门冬 6 个单位">
+      <div class="lbl">吃的药</div><input data-f="口服药" value="${esc(rec['口服药']||'')}" placeholder="例如：二甲双胍 0.5g">
+      <div class="lbl">饭后运动</div><input data-f="餐后运动" value="${esc(rec['餐后运动']||'')}" placeholder="例如：散步30分钟">
+      <div class="lbl">身体感觉</div><input data-f="身体感受" value="${esc(rec['身体感受']||'')}" placeholder="心慌 / 头晕 / 没感觉">
+      <div class="lbl">备注</div><input data-f="备注" value="${esc(rec['备注']||'')}">
+    </div>
+    <div class="lbl" style="margin-top:10px">当时说的原话</div>
+    <div style="font-size:15px;color:var(--tx2);line-height:1.6">${esc(rec['原始语音文本']||'（没有）')}</div>
+  </div>`;
+}
+function flatten(f){const o={};for(const k in(f||{})){let v=f[k];if(Array.isArray(v))v=v[0];o[k]=(v&&typeof v==='object'&&v.text!==undefined)?v.text:v;}return o;}
+async function openEdit(rid){
+  const r=ALL.find(x=>x.record_id===rid);
+  if(!r){toast('记录未加载，请刷新');return;}
+  const f=flatten(r.fields);
+  const rec={};
+  EDITABLE.forEach(k=>rec[k]=f[k]==null?(k==='餐次'?'':null):(GL_FIELDS.some(g=>g[0]===k)?NZ(f[k]):f[k]));
+  rec['日期']=fmtDate(f['日期']);
+  rec['原始语音文本']=f['原始语音文本']||'';
+  EDIT_CTX={rid,rec};
+  document.getElementById('sheetBody').innerHTML=editCard(rec);
+  document.querySelectorAll('#sheetBody [data-f]').forEach(el=>{
+    el.addEventListener('input',()=>{
+      const k=el.getAttribute('data-f');
+      if(el.type==='number'){const v=el.value.trim();EDIT_CTX.rec[k]=v===''?null:parseFloat(v);
+        el.className=(v===''?'na ':'')+glucoseClass(v);}
+      else EDIT_CTX.rec[k]=el.value;
+    });
+    el.addEventListener('change',()=>el.dispatchEvent(new Event('input')));
+  });
+  document.getElementById('sheet').classList.add('on');
+}
+document.getElementById('sheetClose').addEventListener('click',()=>{document.getElementById('sheet').classList.remove('on');EDIT_CTX=null;});
+document.getElementById('sheetSave').addEventListener('click',async ()=>{
+  if(!EDIT_CTX)return;
+  const btn=document.getElementById('sheetSave');btn.disabled=true;btn.textContent='保存中…';
+  try{
+    const r=await fetch(API_BASE+'/api/records/'+EDIT_CTX.rid,{method:'PATCH',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fields:EDIT_CTX.rec})});
+    const j=await r.json();
+    if(!r.ok||!j.ok)throw new Error((j&&j.detail)||'保存失败');
+    toast('已保存');document.getElementById('sheet').classList.remove('on');EDIT_CTX=null;loadData();
+  }catch(e){toast('保存失败：'+e.message);}
+  btn.disabled=false;btn.textContent='保存';
+});
+
+/* ---------------- 分析：范围过滤 ---------------- */
+function ranged(){
+  const from=document.getElementById('fromD').value, to=document.getElementById('toD').value;
+  if(from&&to) return ALL.filter(r=>recDate(r)>=from&&recDate(r)<=to);
+  if(RANGE<=0) return ALL.slice();
+  const min=new Date();min.setDate(min.getDate()-RANGE+1);
+  const minS=todayStr(min);
+  return ALL.filter(r=>recDate(r)>=minS);
+}
+function filtered(){
+  let rows=ranged();
+  if(MEAL_SEL!=='全天') rows=rows.filter(r=>getF(r,'餐次')===MEAL_MAP[MEAL_SEL]);
+  return rows;
+}
+
+/* ---------------- 分析：复合折线图（多时间点，每线固定色，点色=状态） ---------------- */
+function renderLine(){
+  const rows=filtered();
+  const mode=pickAgg();
+  const groups={};
+  SLOT_SEL.forEach(s=>{groups[s]={};});
+  rows.forEach(r=>{
+    const k=aggKey(recDate(r),mode);
+    SLOT_SEL.forEach(s=>{
+      const v=gvNum(r,s);
+      if(v==null)return;
+      (groups[s][k]=groups[s][k]||[]).push(v);
+    });
+  });
+  const keys=Object.keys(groups[SLOT_SEL[0]]||{}).sort();
+  const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  const ds=SLOT_SEL.map(s=>{
+    const data=keys.map(k=>mean((groups[s]||{})[k]||[]));
+    return {
+      label:GL_LABEL[s],data,
+      borderColor:SLOT_COLORS[s]||'#0b6b55',backgroundColor:SLOT_COLORS[s]||'#0b6b55',
+      tension:.3,spanGaps:true,borderWidth:2,
+      pointBackgroundColor:data.map(v=>v==null?'#fff':stateColor(levelOf(v,s))),
+      pointBorderColor:data.map(v=>v==null?'#fff':(SLOT_COLORS[s]||'#0b6b55')),
+      pointRadius:data.map(v=>v!=null?4.5:0),pointHoverRadius:7
+    };
+  });
+  const aggTxt=mode==='day'?'每天':(mode==='week'?'每周':'每月');
+  const slotTxt=SLOT_SEL.map(s=>GL_LABEL[s]).join('、');
+  document.getElementById('chartTitle').textContent=`血糖变化（${MEAL_SEL} · ${slotTxt} · ${aggTxt}平均）· 点色：绿=正常 黄=临界 红=偏高 橙=偏低`;
+  if(typeof Chart==='undefined')return;
+  Chart.defaults.color='#5b6169';Chart.defaults.font.family='-apple-system,PingFang SC,sans-serif';
+  mkChart('cAnalyze',{type:'line',data:{labels:keys.map(k=>aggLabel(k,mode)),datasets:ds},
+    options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{suggestedMin:2.5,suggestedMax:12}}}});
+}
+
+/* ---------------- 分析：单日柱状图（三餐 × 多时间点，柱色=时间点色） ---------------- */
+function renderDay(){
+  if(!DAY_PICK){
+    const withGlu=ALL.filter(r=>gvNum(r,'餐后2小时')!=null).map(recDate).sort();
+    DAY_PICK=withGlu[withGlu.length-1]||todayStr();
+    document.getElementById('dayPick').value=DAY_PICK;
+  }
+  const rows=ALL.filter(r=>recDate(r)===DAY_PICK&&['早餐','午餐','晚餐'].includes(getF(r,'餐次')));
+  const mealsIn=['早餐','午餐','晚餐'];
+  const DAY_SLOTS=['餐前血糖','餐后2小时'];
+  const ds=DAY_SLOTS.map(s=>{
+    const data=mealsIn.map(m=>{
+      const vals=rows.filter(r=>getF(r,'餐次')===m).map(r=>gvNum(r,s)).filter(v=>v!=null);
+      return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+    });
+    return {
+      label:GL_LABEL[s],data,
+      backgroundColor:SLOT_COLORS[s]||'#0b6b55',borderRadius:6,maxBarThickness:36
+    };
+  });
+  document.getElementById('chartTitle').textContent=`${DAY_PICK} · 三餐饭前与饭后2小时血糖 · 蓝=饭前 黄=饭后2小时`;
+  if(typeof Chart==='undefined')return;
+  mkChart('cAnalyze',{type:'bar',data:{labels:['早饭','午饭','晚饭'],datasets:ds},
+    options:{maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{suggestedMin:2.5,suggestedMax:12}}}});
+}
+
+/* ---------------- 分析：指标卡（按当前餐次×时间点）+ 超标食物 + 明细 ---------------- */
+function renderAll(){
+  const rows=ranged();
+  const dimRows=MEAL_SEL==='全天'?rows:rows.filter(r=>getF(r,'餐次')===MEAL_MAP[MEAL_SEL]);
+  const R=rangeInfo(SLOT_SEL[0]);
+  const vals=[];
+  dimRows.forEach(r=>{SLOT_SEL.forEach(s=>{const v=gvNum(r,s);if(v!=null)vals.push({ok:levelOf(v,s).ok,vv:v});});});
+  const okVals=vals.filter(x=>x.ok);
+  const n=vals.length;
+  const nums=vals.map(x=>x.vv);
+  const avg=n?(nums.reduce((a,b)=>a+b,0)/n):null;
+  const lo=n?Math.min(...nums):null,hi=n?Math.max(...nums):null;
+  const rate=n?Math.round(okVals.length/n*100):null;
+  const carbDays={};
+  rows.forEach(r=>{const c=gvNum(r,'碳水估算(g)');if(c!=null){const d=recDate(r);carbDays[d]=(carbDays[d]||0)+c;}});
+  const cd=Object.keys(carbDays);
+  const avgCarb=cd.length?Math.round(cd.reduce((a,d)=>a+carbDays[d],0)/cd.length):null;
+  const dimTxt=(MEAL_SEL==='全天'?'全天':MEAL_SEL)+' · '+SLOT_SEL.map(s=>GL_LABEL[s]).join('、');
+  const rangeTxt=RANGE<=0?'全部记录':('近'+RANGE+'天');
+  document.getElementById('statCards').innerHTML=
+    `<div class="hint">统计口径：${rangeTxt} · ${dimTxt}（点色：绿=正常、黄=临界、红=偏高、橙=偏低）</div>
+    <div class="stats">
+      <div class="stat"><b>${n}<small>次</small></b><span>${dimTxt}读数</span></div>
+      <div class="stat ${avg!=null&&avg>R.warn?'warn':'good'}"><b>${avg!=null?avg.toFixed(1):'--'}<small>mmol/L</small></b><span>平均值</span></div>
+      <div class="stat ${rate!=null&&rate>=70?'good':(rate!=null?'warn':'')}"><b>${rate!=null?rate+'%':'--'}</b><span>达标率</span></div>
+      <div class="stat"><b>${avgCarb!=null?avgCarb:'--'}<small>g/天</small></b><span>平均每天主食(碳水)</span></div>
+      <div class="stat ${lo!=null&&lo<R.lo?'warn':''}"><b>${lo!=null?lo.toFixed(1):'--'}</b><span>最低</span></div>
+      <div class="stat ${hi!=null&&hi>R.warn?'warn':''}"><b>${hi!=null?hi.toFixed(1):'--'}</b><span>最高</span></div>
+    </div>`;
+
+  /* ---- 血糖偏高的餐，吃什么最多（主要食物→食物标签→食物明细 三级提取） ---- */
+  const bad={};
+  rows.forEach(r=>{
+    if(gvNum(r,'餐后2小时')>10){
+      const m=getF(r,'主要食物')||getF(r,'食物标签')||String(getF(r,'食物明细')||'').split('/')[0].trim();
+      if(m)bad[m]=(bad[m]||0)+1;
+    }
+  });
+  const bd=Object.keys(bad).sort((a,b)=>bad[b]-bad[a]).slice(0,10);
+
+  /* ---- 自动分析：基于当前范围/维度的人话结论 ---- */
+  const ins=[];
+  if(n>0){
+    ins.push(`${rangeTxt}里，${dimTxt}一共测了 ${n} 次，达标 ${okVals.length} 次，达标率 ${rate}%。`);
+  }
+  if(hi!=null){
+    let hiInfo=null;
+    dimRows.forEach(r=>{SLOT_SEL.forEach(s=>{const v=gvNum(r,s);if(v!=null&&hiInfo===null&&v===hi){hiInfo={date:recDate(r),slot:GL_LABEL[s],v};}});});
+    if(hiInfo) ins.push(`最高的 ${hi.toFixed(1)} 出现在 ${hiInfo.date}（${hiInfo.slot}）`+(hi>R.warn?`，比正常上限 ${R.ideal} 高出不少，那几天吃了什么可以点开看看`:'')+'。');
+  }
+  if(lo!=null&&lo<R.lo){
+    let loInfo=null;
+    dimRows.forEach(r=>{SLOT_SEL.forEach(s=>{const v=gvNum(r,s);if(v!=null&&loInfo===null&&v===lo){loInfo={date:recDate(r),slot:GL_LABEL[s]};}});});
+    if(loInfo) ins.push(`最低的 ${lo.toFixed(1)} 出现在 ${loInfo.date}（${loInfo.slot}），低于 ${R.lo}，注意有没有心慌头晕。`);
+  }
+  if(bd.length&&bad[bd[0]]>=2) ins.push(`血糖偏高的 ${Object.values(bad).reduce((a,b)=>a+b,0)} 餐里，「${bd[0]}」出现 ${bad[bd[0]]} 次最多，可以试着少吃它看血糖变化。`);
+  const insBox=document.getElementById('insightsBox');
+  if(ins.length){insBox.style.display='block';insBox.innerHTML=`<div class="card"><div class="lbl" style="margin-top:0">自动分析（${rangeTxt}）</div>${ins.map(t=>`<div style="font-size:16px;line-height:1.8;color:var(--tx);margin-bottom:6px">· ${t}</div>`).join('')}</div>`;}
+  else insBox.style.display='none';
+
+  if(typeof Chart!=='undefined'){
+    mkChart('cBadFood',{type:'bar',data:{
+      labels:bd,datasets:[{label:'次数',data:bd.map(k=>bad[k]),backgroundColor:'#c0392b',borderRadius:5,maxBarThickness:30}]
+    },options:{maintainAspectRatio:false,plugins:{legend:{display:false}},indexAxis:Object.keys(bad).length>6?'y':'x'}});
+  }
+
+  /* ---- 明细：默认折叠，点“展开查看全部” ---- */
+  const box=document.getElementById('queryBox');
+  if(!rows.length){box.innerHTML=`<div class="empty">该范围内没有记录</div>`;return;}
+  const SHOW=window._qShowAll===true;
+  box.innerHTML=(SHOW?rows.map(recRow).join(''):rows.slice(0,10).map(recRow).join(''))
+    +(rows.length>10?`<button class="btn ghost" id="qMore" style="margin-top:6px">${SHOW?'收起':'展开查看全部（共 '+rows.length+' 条）'}</button>`:'');
+  const qm=document.getElementById('qMore');
+  if(qm)qm.addEventListener('click',()=>{window._qShowAll=!SHOW;renderAll();});
+  bindRows(box);
+}
+
+/* ---------------- 控件 ---------------- */
+function buildChips(){
+  const mc=document.getElementById('mealChips');
+  mc.innerHTML=MEAL_OPTS.map(([k,label])=>`<button data-meal="${k}" class="${(MEAL_SEL===k)?'on':''}">${label}</button>`).join('');
+  mc.querySelectorAll('[data-meal]').forEach(b=>b.addEventListener('click',()=>{
+    MEAL_SEL=b.getAttribute('data-meal');
+    mc.querySelectorAll('[data-meal]').forEach(x=>x.classList.toggle('on',x===b));
+    renderLine();renderAll();
+  }));
+  const sc=document.getElementById('slotChips');
+  sc.innerHTML=SLOT_OPT.map(([f,label])=>`<button data-slot="${f}" class="${SLOT_SEL.includes(f)?'on':''}">${label}</button>`).join('');
+  sc.querySelectorAll('[data-slot]').forEach(b=>b.addEventListener('click',()=>{
+    const f=b.getAttribute('data-slot');
+    if(SLOT_SEL.includes(f))SLOT_SEL=SLOT_SEL.filter(x=>x!==f);
+    else SLOT_SEL.push(f);
+    if(!SLOT_SEL.length)SLOT_SEL=['餐后2小时'];
+    sc.querySelectorAll('[data-slot]').forEach(x=>x.classList.toggle('on',SLOT_SEL.includes(x.getAttribute('data-slot'))));
+    renderLine();renderAll();
+  }));
+}
+function switchMode(mode){
+  MODE=mode;
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.getAttribute('data-mode')===mode));
+  document.getElementById('ctrlLine').style.display=mode==='line'?'':'none';
+  document.getElementById('ctrlDay').style.display=mode==='day'?'':'none';
+  (mode==='line'?renderLine:renderDay)();
+}
+
+document.querySelectorAll('#rangeChips [data-range]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#rangeChips [data-range]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');RANGE=parseInt(b.getAttribute('data-range'));
+  document.getElementById('fromD').value='';document.getElementById('toD').value='';
+  renderAll();(MODE==='line'?renderLine:renderDay)();
+}));
+document.getElementById('customBtn').addEventListener('click',()=>{RANGE=-1;renderAll();(MODE==='line'?renderLine:renderDay)();});
+document.getElementById('refreshBtn').addEventListener('click',()=>{toast('正在从飞书同步…');loadData();});
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>switchMode(b.getAttribute('data-mode'))));
+document.getElementById('dayPick').addEventListener('change',e=>{DAY_PICK=e.target.value;renderDay();});
+document.getElementById('dayPrev').addEventListener('click',()=>{
+  const d=new Date(DAY_PICK);d.setDate(d.getDate()-1);DAY_PICK=todayStr(d);document.getElementById('dayPick').value=DAY_PICK;renderDay();
+});
+document.getElementById('dayNext').addEventListener('click',()=>{
+  const d=new Date(DAY_PICK);d.setDate(d.getDate()+1);DAY_PICK=todayStr(d);document.getElementById('dayPick').value=DAY_PICK;renderDay();
+});
+document.getElementById('openBase').addEventListener('click',async()=>{
+  const j=await(await fetch(API_BASE+'/api/config')).json();window.open(j.base_url,'_blank');
+});
+document.getElementById('csvBtn').addEventListener('click',()=>{
+  if(!ALL.length){toast('没有可导出的数据');return;}
+  const cols=['日期','餐次','食物明细','碳水估算(g)','热量估算(kcal)','升糖风险','餐前血糖','餐后30分','餐后1小时','餐后2小时','餐后3小时','胰岛素','口服药','餐后运动','身体感受','数据来源','原始语音文本','备注'];
+  const lines=[cols.join(',')].concat(ALL.map(r=>{
+    const f=r.fields||{};
+    return cols.map(k=>{
+      let v=Array.isArray(f[k])?f[k][0]:f[k];
+      if(k==='日期')v=fmtDate(v);
+      v=(v==null?'':String(v)).replace(/"/g,'""').replace(/[\r\n]+/g,' ');
+      return /[,"]/.test(v)?`"${v}"`:v;
+    }).join(',');
+  }));
+  const blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='糖友饮食记录_'+todayStr()+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  toast('已导出 '+ALL.length+' 条');
+});
+
+/* ---------------- Tab ---------------- */
+function switchTab(n){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.getAttribute('data-p')===n));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+n));
+  if(n==='today'||n==='report')renderAll();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>switchTab(b.getAttribute('data-p'))));
+
+/* ---------------- PWA：安装提示 + Service Worker ---------------- */
+let deferredPrompt=null;
+const installBar=document.getElementById('installBar');
+const installBtn=document.getElementById('installBtn');
+const installTip=document.getElementById('installTip');
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  if(!isStandalone){installBar.classList.add('on');}
+});
+installBtn.addEventListener('click',()=>{
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(()=>{deferredPrompt=null;installBar.classList.remove('on');});
+  }else if(isIOS){
+    installTip.innerHTML='在 Safari 底部点 <b>分享</b> → 选 <b>添加到主屏幕</b> → 右上角「添加」，桌面就会出现图标';
+    installBtn.textContent='知道了';
+  }
+});
+if(isIOS&&!isStandalone){
+  installBar.classList.add('on');
+  installBtn.textContent='怎么装';
+}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
+
+/* ---------------- 适老化：字号调节（保存选择） ---------------- */
+const SIZE_KEY='glu_font_size';
+function applySize(s){
+  document.documentElement.dataset.size=s||'';
+  try{localStorage.setItem(SIZE_KEY,s||'');}catch(e){}
+}
+document.getElementById('fontMax').addEventListener('click',()=>{
+  const c=document.documentElement.dataset.size||'';
+  applySize(c==='lg'||c==='xl'?'xl':'lg');
+  toast('字调大了，右上角 A− 可调回');
+});
+document.getElementById('fontMin').addEventListener('click',()=>{
+  const c=document.documentElement.dataset.size||'';
+  applySize(c==='lg'?'':(c==='xl'?'lg':''));
+  toast('字调小了，A+ 可调大');
+});
+try{const s=localStorage.getItem(SIZE_KEY);if(s)document.documentElement.dataset.size=s;}catch(e){}
+
+/* ---------------- 启动 ---------------- */
+(async function init(){
+  buildChips();
+  renderMed();
+  document.getElementById('fromD').value='';
+  document.getElementById('toD').value='';
+  switchMode('line');
+  try{
+    const j=await(await fetch(API_BASE+'/api/config')).json();
+    document.getElementById('hdrSub').innerHTML=`数据都记在云端，随时能查 · <a href="${j.base_url}" target="_blank">看数据表</a>`;
+  }catch(e){}
+  await loadData();
+  renderLine();
+})();
+</script>
+</body>
+</html>
