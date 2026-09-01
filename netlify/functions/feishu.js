@@ -46,7 +46,7 @@ function normalize(rec) {
   const f = {};
   for (const [k, v] of Object.entries(rec || {})) {
     if (v === null || v === undefined || (typeof v === 'string' && !v.trim())) continue;
-    if (SELECT_FIELDS.includes(k)) f[k] = [Array.isArray(v) ? v[0] : v];
+    if (SELECT_FIELDS.includes(k)) { const s = Array.isArray(v) ? v[0] : v; if (s !== undefined && s !== null && s !== '') f[k] = s; }
     else if (NUMBER_FIELDS.includes(k)) { const n = parseFloat(v); if (!isNaN(n)) f[k] = n; }
     else if (DATE_FIELDS.includes(k)) { const ms = toMs(v); if (ms) f[k] = ms; }
     else if (DATETIME_FIELDS.includes(k)) { const ms = toMs(v); if (ms) f[k] = ms; }
