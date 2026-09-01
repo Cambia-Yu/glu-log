@@ -108,6 +108,12 @@ exports.handler = async (event) => {
       });
       return ok({ ok: true, record_id: ridM[1] });
     }
+    if (ridM && event.httpMethod === 'DELETE') {
+      await feishu(`/open-apis/bitable/v1/apps/${BASE_TOKEN}/tables/${TABLE_ID}/records/batch_delete`, {
+        method: 'POST', body: JSON.stringify({ records: [ridM[1]] }),
+      });
+      return ok({ ok: true, record_id: ridM[1] });
+    }
     return ok({ ok: false, error: '404 ' + route }, 404);
   } catch (e) {
     return ok({ ok: false, error: e.message }, 500);
